@@ -1,0 +1,113 @@
+#!/bin/sh
+
+SCRIPT_NAME="$0"
+
+# Script to compile documents to pdf (default), ps, or dvi
+# Will support: LaTeX documents (.tex), Markdown (.md) (pandoc), maybe R
+# markdown (.rmd) ?
+
+DEFAULT_OUTPUT_DEVICE="pdf"
+
+output_device="$DEFAULT_OUTPUT_DEVICE"
+
+TMP_DIR="$(mktemp -d)"
+output_file="out.$output_device"
+
+final_dir="$(pwd)" # Where to return after compiling
+
+# TODO: support different output devices
+
+
+# Functions to compile documents
+
+# Function to compile latex documents
+latex_compile() {
+    # Usage: $1 is input file, $2 is output file
+    cp "$1" "$TMP_DIR/"
+    cd "$TMP_DIR" || return 1
+
+    pdflatex --enable-write18 -interaction=nonstopmode "$1" >&2 > /dev/null
+    bibtex "${1%.*}.aux"
+    pdflatex --enable-write18 -interaction=nonstopmode "$1" >&2 > /dev/null
+    pdflatex --enable-write18 -interaction=nonstopmode "$1" >&2 > /dev/null
+    mv "${1%.*}.pdf" "$2"
+    cd "$final_dir" || return 1
+}
+# Function to compile markdown documents
+markdown_compile() {
+    # TODO
+    true
+}
+
+print_usage() {
+    printf "%s\n" "Usage: $SCRIPT_NAME [options] file" >&2
+    # TODO: print available options here
+}
+
+# Function to set the output device from a string argument
+set_device() {
+    case $1 in
+        -tpdf)
+            output_device="pdf"
+            ;;
+        -tps)
+            output_device="ps"
+            ;;
+        -tdvi)
+            output_device="dvi"
+            ;;
+        *)
+            output_device=""
+            return 1
+            ;;
+    esac
+}
+
+# Iterate through command-line options
+while [ -n "$1" ]; do
+    case $1 in
+        -t*)
+            set_device "$1" || { print_usage; exit 1; }
+            shift
+            ;;
+        -o)
+            output_file="$2"
+            shift 2
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+# If there is no filename given, print usage and exit
+[ -z "$1" ] && { print_usage; exit 1; }
+
+input_file="$1"
+
+# Compile the input file
+case "$input_file" in
+    *.tex)
+        latex_compile "$input_file" "$output_file"
+        ;;
+    *.md)
+        markdown_compile "$input_file" "$output_file"
+        ;;
+    *)
+        printf "%s\n" "Error: unrecognised filetype" >&2
+        exit 1
+        ;;
+esac
+
+echo
+echo
+echo
+pwd
+echo
+echo
+echo
+
+# Move the compiled document to the output location
+mv "$TMP_DIR/$output_file" "$output_file"
+
+rm -rf "$TMP_DIR"

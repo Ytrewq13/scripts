@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# FIXME: date -d "tomorrow" gives the datetime for tomorrow at current time,
+# i.e. we always get 24 hours difference.
+d1=$(date -d "$1" +%s)
+d2=$(date -d "$2" +%s)
+
+diff=$(( d1-d2 ))
+diff="$(( diff < 0 ? -diff : diff ))"
+
+echo "$diff" | timeformat.awk

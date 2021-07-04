@@ -1,0 +1,7 @@
+#!/bin/sh
+
+if [ "$(pgrep screenkey | wc -l)" -ge 3 ]; then
+    killall screenkey
+else
+    setsid -f screenkey "$@"
+fi

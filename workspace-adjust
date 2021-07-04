@@ -1,0 +1,4 @@
+#!/bin/sh
+
+ws="$(($( i3-msg -t get_workspaces | jq -r '.[] | select(.focused==true).name' ) + $1))"
+i3-msg -t run_command "workspace $ws"

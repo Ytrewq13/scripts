@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# Arguments are names of pdfs to concatenate
+
+# shellcheck disable=2068
+qpdf --empty --pages $@ -- -

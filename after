@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Usage: [scriptname] line
+# prints stdin removing everything before `line` appears
+awk -v startline="$1" '
+BEGIN {
+    seen = 0
+}
+{
+    if ($0 == startline) seen=1
+    if (seen) {print}
+}'

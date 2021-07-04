@@ -1,0 +1,3 @@
+#!/bin/sh
+
+scrot -s '%Y-%m-%d-%s_screenshot_$wx$h.png' -e 'xclip -selection clipboard -t image/png -i $f; mv $f /tmp/'

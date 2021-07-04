@@ -1,0 +1,81 @@
+#!/bin/sh
+
+# Defining default values
+defaultsize="1920x1080"
+defaultcolor="black"
+defaultfile="colorimage.png"
+defaultverbose=0
+
+# Assigning values to defaults
+[ -n "$size" ] || size="$defaultsize"
+[ -n "$color" ] || color="$defaultcolor"
+[ -n "$filename" ] || filename="$defaultfile"
+[ -n "$verbose" ] || verbose="$defaultverbose"
+
+# Function to print usage
+print_help() {
+cat << EOF
+Usage: $0 [options] [filename]
+
+If filename is unspecified, the script will create a file called $defaultfile.
+If filename is unspecified but the color is specified, then the file will be called \$color.png
+
+The available options are:
+-h, -?, --help : print this help message then exit
+-v, --verbose : print the command being run
+-c 'col', --color 'col' : use col as the color string (must use ImageMagick syntax)
+-s WxH, --size WxH : specify the size of the image produced (default $defaultsize)
+
+Examples of how to use:
+
+$0 --color blue blue.png
+
+$0 --color '#f00' red-rgb.jpg
+
+$0 --size 1x1 --color black black-pixel.png
+
+$0 -c green
+EOF
+}
+
+# TODO: implement options.
+
+while :; do
+    case $1 in
+        -h|-\?|--help)
+            print_help
+            exit
+            ;;
+        -c|--color)
+            if [ -n "$2" ]; then
+                color="$2"
+                filename="$2.png"
+                shift 2
+            else
+                printf "ERROR! optional argument '%s' requires value, none given.\n" "$1" >&2
+                exit 1
+            fi
+            ;;
+        -s|--size)
+            if [ -n "$2" ]; then
+                size="$2"
+                shift 2
+            else
+                printf "ERROR! optional argument '%s' requires value, none given.\n" "$1" >&2
+                exit 1
+            fi
+            ;;
+        -v|--verbose)
+            verbose=1
+            shift
+            ;;
+        *)
+            [ -n "$1" ] && filename="$1"
+            break
+            ;;
+    esac
+done
+
+[ "$verbose" -ge 1 ] && echo "$color" | xargs -I{} echo convert -size "$size" xc:'{}' "$filename"
+
+echo "$color" | xargs -I{} convert -size "$size" xc:'{}' "$filename"
