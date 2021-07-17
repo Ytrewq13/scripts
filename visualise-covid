@@ -24,9 +24,9 @@ DATE_MAX=$(date -d "+2 days" -I)
 
 # The limits for the y-axes
 CASES_MIN=0
-CASES_MAX=60000
+CASES_MAX=100000
 DEATHS_MIN=0
-DEATHS_MAX=100
+DEATHS_MAX=200
 
 DATEF=1         # Date              Field
 CASESF=2        # Cases             Field (daily cases)
