@@ -1,0 +1,105 @@
+#!/bin/sh
+
+# This script allows the user to select one of the connected monitors
+# and then it changes the laptop's touch input to map it onto that monitor
+
+SETTINGS_VERBOSE=
+
+FINGER="Wacom ISDv4 E6 Finger"
+PEN="Wacom ISDv4 E6 Pen Pen (0)"
+
+MATRIX="Coordinate Transformation Matrix"
+
+reset_ctm() {
+    xinput set-prop "$FINGER" --type=float "$MATRIX" 1 0 0 0 1 0 0 0 1
+    xinput set-prop "$PEN" --type=float "$MATRIX" 1 0 0 0 1 0 0 0 1
+}
+
+is_not_integer() {
+    case "$1" in
+        ''|*[!0-9]*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+while [ -n "$1" ]; do
+    case $1 in
+        --reset)
+            reset_ctm
+            exit
+            ;;
+        -v|--verbose)
+            SETTINGS_VERBOSE=1
+            shift
+            ;;
+        *)
+            ;;
+    esac
+done
+
+# format:
+# monitor_name width height offset_x offset_y
+monitors_info=$(xrandr -q |
+    sed -nr 's/^(\w+-\w)\s*connected.*\s([[:digit:]]+x[[:digit:]]+\+[[:digit:]]+\+[[:digit:]]+)\s.*$/\1 \2/p' |
+    tr 'x+' ' ')
+
+monitors_names=$(echo "$monitors_info" | cut -d' ' -f1)
+monitors_dims=$(echo "$monitors_info" | cut -d' ' -f2-)
+
+# Prompt user
+echo "$monitors_names" | awk '{printf "(%d) %s\n", NR, $0}'
+total_monitors=$(echo "$monitors_names" | wc -l)
+mon_num=
+while is_not_integer "$mon_num" || [ "$mon_num" -lt 1 ] || [ "$mon_num" -gt "$total_monitors" ]; do
+    printf "Select a monitor (between 1 and %d) or 'a' for all: " "$total_monitors"
+    read -r mon_num
+    if [ -z "$mon_num" ]; then
+        exit
+    elif [ "$mon_num" = "a" ]; then
+        echo "Resetting CTM..."
+        reset_ctm
+        exit
+    fi
+done
+
+if [ -n "$SETTINGS_VERBOSE" ]; then
+    printf "You selected %d (" "$mon_num"
+    echo "$monitors_names" | sed -n "${mon_num}p" | tr -d "\n"
+    printf "), dimensions: "
+    echo "$monitors_dims" | sed -n "${mon_num}p"
+fi
+
+monitor_dims=$(echo "$monitors_dims" | sed -n "${mon_num}p")
+
+TOUCH_WIDTH=$(echo "$monitor_dims" | cut -d' ' -f1)
+TOUCH_HEIGHT=$(echo "$monitor_dims" | cut -d' ' -f2)
+TOUCH_OFFSET_X=$(echo "$monitor_dims" | cut -d' ' -f3)
+TOUCH_OFFSET_Y=$(echo "$monitor_dims" | cut -d' ' -f4)
+
+if [ -n "$SETTINGS_VERBOSE" ]; then
+    echo "width: $TOUCH_WIDTH"
+    echo "height: $TOUCH_HEIGHT"
+    echo "x offset: $TOUCH_OFFSET_X"
+    echo "y offset: $TOUCH_OFFSET_Y"
+fi
+
+#TOUCH_WIDTH=1920
+#TOUCH_HEIGHT=1080
+#TOUCH_OFFSET_X=1366
+#TOUCH_OFFSET_Y=0
+
+totals=$(xrandr -q | head -n1 | cut -d, -f2 | cut -d' ' -f3,5)
+
+TOTAL_WIDTH=${totals%% *}
+TOTAL_HEIGHT=${totals##* }
+
+c0=$(echo "$TOUCH_WIDTH/$TOTAL_WIDTH" | bc -l)
+c1=$(echo "$TOUCH_OFFSET_X/$TOTAL_WIDTH" | bc -l)
+c2=$(echo "$TOUCH_HEIGHT/$TOTAL_HEIGHT" | bc -l)
+c3=$(echo "$TOUCH_OFFSET_Y/$TOTAL_HEIGHT" | bc -l)
+
+xinput set-prop "$FINGER" --type=float "$MATRIX" \
+    "$c0" 0 "$c1" 0 "$c2" "$c3" 0 0 1
+
+xinput set-prop "$PEN" --type=float "$MATRIX" \
+    "$c0" 0 "$c1" 0 "$c2" "$c3" 0 0 1
