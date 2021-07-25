@@ -35,9 +35,9 @@ hour=$(date +%H)
 if [ "$hour" -ge 16 ]; then # This is a hack to get around outdated info
     cases=$(echo "$result" | cut -d' ' -f3 | tr -d '(+,)')
     deaths=$(echo "$result" | cut -d' ' -f5 | tr -d '(+,)')
-    [ "$cases" = "" ] && exit
-    [ "$deaths" = "" ] && deaths=0
-#    [ "$cases" = "" ] || [ "$deaths" = "" ] && exit # Don't add to file if c/d info missing
+#    [ "$cases" = "" ] && exit
+#    [ "$deaths" = "" ] && deaths=0
+    [ "$cases" = "" ] || [ "$deaths" = "" ] && exit # Don't add to file if c/d info missing
     # TODO: Add cum_cases & cum_deaths?
     dbresult="$today,$epochnow,$cases,$deaths"
 
