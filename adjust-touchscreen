@@ -5,14 +5,22 @@
 
 SETTINGS_VERBOSE=
 
-FINGER="Wacom ISDv4 E6 Finger"
-PEN="Wacom ISDv4 E6 Pen Pen (0)"
+WACOM="Wacom ISDv4 E6"
+FINGER="$WACOM Finger"
+PEN="$WACOM Pen Pen (0)"
+ERASER="$WACOM Pen Eraser (0)"
 
 MATRIX="Coordinate Transformation Matrix"
 
+set_ctm() {
+    xinput set-prop "$1" --type=float "$MATRIX" \
+        "$2" "$3" "$4" "$5" "$6" "$7" "$8" "$9" "${10}"
+}
+
 reset_ctm() {
-    xinput set-prop "$FINGER" --type=float "$MATRIX" 1 0 0 0 1 0 0 0 1
-    xinput set-prop "$PEN" --type=float "$MATRIX" 1 0 0 0 1 0 0 0 1
+    set_ctm "$FINGER" 1 0 0 0 1 0 0 0 1
+    set_ctm "$PEN" 1 0 0 0 1 0 0 0 1
+    set_ctm "$ERASER" 1 0 0 0 1 0 0 0 1
 }
 
 is_not_integer() {
@@ -39,9 +47,8 @@ done
 
 # format:
 # monitor_name width height offset_x offset_y
-monitors_info=$(xrandr -q |
-    sed -nr 's/^(\w+-\w)\s*connected.*\s([[:digit:]]+x[[:digit:]]+\+[[:digit:]]+\+[[:digit:]]+)\s.*$/\1 \2/p' |
-    tr 'x+' ' ')
+monitors_info=$(xrandr --listactivemonitors |
+    sed -r '1d; s_^.*:\s+\S+\s+([[:digit:]]+)/[[:digit:]]+x([[:digit:]]+)/[[:digit:]]+\+([[:digit:]]+)\+([[:digit:]]+)\s+(\S+)_\5 \1 \2 \3 \4_')
 
 monitors_names=$(echo "$monitors_info" | cut -d' ' -f1)
 monitors_dims=$(echo "$monitors_info" | cut -d' ' -f2-)
@@ -98,8 +105,17 @@ c1=$(echo "$TOUCH_OFFSET_X/$TOTAL_WIDTH" | bc -l)
 c2=$(echo "$TOUCH_HEIGHT/$TOTAL_HEIGHT" | bc -l)
 c3=$(echo "$TOUCH_OFFSET_Y/$TOTAL_HEIGHT" | bc -l)
 
-xinput set-prop "$FINGER" --type=float "$MATRIX" \
-    "$c0" 0 "$c1" 0 "$c2" "$c3" 0 0 1
+F_EXISTS=0
+P_EXISTS=0
+E_EXISTS=0
+xinput list | grep -q "$FINGER" && F_EXISTS=1
+xinput list | grep -q "$PEN"    && P_EXISTS=1
+xinput list | grep -q "$ERASER" && E_EXISTS=1
 
-xinput set-prop "$PEN" --type=float "$MATRIX" \
-    "$c0" 0 "$c1" 0 "$c2" "$c3" 0 0 1
+[ "$F_EXISTS" -eq 1 ] && set_ctm "$FINGER" "$c0" 0 "$c1" 0 "$c2" "$c3" 0 0 1
+[ "$P_EXISTS" -eq 1 ] && set_ctm "$PEN"    "$c0" 0 "$c1" 0 "$c2" "$c3" 0 0 1
+[ "$E_EXISTS" -eq 1 ] && set_ctm "$ERASER" "$c0" 0 "$c1" 0 "$c2" "$c3" 0 0 1
+
+[ "$F_EXISTS" -eq 0 ] && echo "Error: The finger device doesn't exist" >&2
+[ "$P_EXISTS" -eq 0 ] && echo "Error: The pen device doesn't exist"    >&2
+[ "$E_EXISTS" -eq 0 ] && echo "Error: The eraser device doesn't exist" >&2
