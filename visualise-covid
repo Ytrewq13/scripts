@@ -24,7 +24,7 @@ DATE_MAX=$(date -d "+2 days" -I)
 
 # The limits for the y-axes
 CASES_MIN=0
-CASES_MAX=100000
+CASES_MAX=80000
 DEATHS_MIN=0
 DEATHS_MAX=200
 
@@ -34,9 +34,14 @@ DEATHSF=3       # Deaths            Field (daily deaths)
 AVGCASESF=4     # Average Cases     Field
 AVGDEATHSF=5    # Average Deaths    Field
 
+LASTWEEK="$(date -I -d '-7 days')"
+
 #TODAY="$(tail -n1 "$wdir/$SMA_FILENAME" | cut -d, -f1)"
-AVGCASES="$(tail -n1 "$wdir/$SMA_FILENAME" | cut -d, -f"$AVGCASESF")"
-AVGDEATH="$(tail -n1 "$wdir/$SMA_FILENAME" | cut -d, -f"$AVGDEATHSF")"
+#AVGCASES="$(tail -n1 "$wdir/$SMA_FILENAME" | cut -d, -f"$AVGCASESF")"
+#AVGDEATH="$(tail -n1 "$wdir/$SMA_FILENAME" | cut -d, -f"$AVGDEATHSF")"
+
+FSTCASES="$(grep "$LASTWEEK" "$wdir/$SMA_FILENAME" | cut -d, -f"$CASESF")"
+FSTDEATH="$(grep "$LASTWEEK" "$wdir/$SMA_FILENAME" | cut -d, -f"$DEATHSF")"
 
 cd "$wdir" || exit 1
 
@@ -53,8 +58,8 @@ echo "
     set xrange ['$DATE_MIN':'$DATE_MAX']
     set yrange [$CASES_MIN:$CASES_MAX]
     set y2range [$DEATHS_MIN:$DEATHS_MAX]
-    set label 10 '$AVGCASES' at graph 0,0 font 'arial,11' tc rgb '$CASES_COL' offset character 1.2,1.7
-    set label 11 '$AVGDEATH' at graph 0,0 font 'arial,11' tc rgb '$DEATH_COL' offset character 1.2,1.0
+    set label 10 '$FSTCASES' at graph 0,0 font 'arial,11' tc rgb '$CASES_COL' offset character 1.2,1.7
+    set label 11 '$FSTDEATH' at graph 0,0 font 'arial,11' tc rgb '$DEATH_COL' offset character 1.2,1.0
     set term pdf color font 'arial,14' linewidth 2
     set output '$pdf_file'
     plot '$SMA_FILENAME' using $DATEF:$AVGCASESF with lines axis x1y1 lt rgb '$CASES_COL', \
