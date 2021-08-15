@@ -40,8 +40,8 @@ LASTWEEK="$(date -I -d '-7 days')"
 #AVGCASES="$(tail -n1 "$wdir/$SMA_FILENAME" | cut -d, -f"$AVGCASESF")"
 #AVGDEATH="$(tail -n1 "$wdir/$SMA_FILENAME" | cut -d, -f"$AVGDEATHSF")"
 
-FSTCASES="$(grep "$LASTWEEK" "$wdir/$SMA_FILENAME" | cut -d, -f"$CASESF")"
-FSTDEATH="$(grep "$LASTWEEK" "$wdir/$SMA_FILENAME" | cut -d, -f"$DEATHSF")"
+FSTCASES="$(grep "$LASTWEEK" "$wdir/$SMA_FILENAME" | cut -d, -f"$CASESF" | numfmt --grouping)"
+FSTDEATH="$(grep "$LASTWEEK" "$wdir/$SMA_FILENAME" | cut -d, -f"$DEATHSF" | numfmt --grouping)"
 
 cd "$wdir" || exit 1
 
@@ -58,7 +58,7 @@ echo "
     set xrange ['$DATE_MIN':'$DATE_MAX']
     set yrange [$CASES_MIN:$CASES_MAX]
     set y2range [$DEATHS_MIN:$DEATHS_MAX]
-    set obj 1 rect from graph 0.01,0.01 to graph 0.12,0.14 front fillstyle solid noborder
+    set obj 1 rect from graph 0.01,0.01 to character 15,4.2 front fillstyle solid noborder
     set label 10 '$FSTCASES' at graph 0,0 font 'arial,11' tc rgb '$CASES_COL' offset character 1.2,1.7 front
     set label 11 '$FSTDEATH' at graph 0,0 font 'arial,11' tc rgb '$DEATH_COL' offset character 1.2,1.0 front
     set term pdf color font 'arial,14' linewidth 2
