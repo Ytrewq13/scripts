@@ -58,8 +58,9 @@ echo "
     set xrange ['$DATE_MIN':'$DATE_MAX']
     set yrange [$CASES_MIN:$CASES_MAX]
     set y2range [$DEATHS_MIN:$DEATHS_MAX]
-    set label 10 '$FSTCASES' at graph 0,0 font 'arial,11' tc rgb '$CASES_COL' offset character 1.2,1.7
-    set label 11 '$FSTDEATH' at graph 0,0 font 'arial,11' tc rgb '$DEATH_COL' offset character 1.2,1.0
+    set obj 1 rect from graph 0.01,0.01 to graph 0.12,0.14 front fillstyle solid noborder
+    set label 10 '$FSTCASES' at graph 0,0 font 'arial,11' tc rgb '$CASES_COL' offset character 1.2,1.7 front
+    set label 11 '$FSTDEATH' at graph 0,0 font 'arial,11' tc rgb '$DEATH_COL' offset character 1.2,1.0 front
     set term pdf color font 'arial,14' linewidth 2
     set output '$pdf_file'
     plot '$SMA_FILENAME' using $DATEF:$AVGCASESF with lines axis x1y1 lt rgb '$CASES_COL', \
