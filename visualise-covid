@@ -34,6 +34,11 @@ DEATHSF=3       # Deaths            Field (daily deaths)
 AVGCASESF=4     # Average Cases     Field
 AVGDEATHSF=5    # Average Deaths    Field
 
+MAXC_LASTMONTH=$(tail -n60 "$wdir/$SMA_FILENAME" | cut -d, -f"$CASESF" | sort -nr | head -n1)
+MAXD_LASTMONTH=$(tail -n60 "$wdir/$SMA_FILENAME" | cut -d, -f"$DEATHSF" | sort -nr | head -n1)
+CASES_MAX=$(( (3*MAXC_LASTMONTH/2000) * 1000 ))
+DEATHS_MAX=$(( (3*MAXD_LASTMONTH/20) * 10 ))
+
 FIRSTDATE="$(tail -n"$AVG_LEN" "$DB_DIR/$DB_FILENAME" | head -n1 | cut -d, -f"$DATEF")"
 
 #TODAY="$(tail -n1 "$wdir/$SMA_FILENAME" | cut -d, -f1)"
