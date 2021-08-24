@@ -9,8 +9,48 @@ WACOM="Wacom ISDv4 E6"
 FINGER="$WACOM Finger"
 PEN="$WACOM Pen Pen (0)"
 ERASER="$WACOM Pen Eraser (0)"
+PAD=
 
 MATRIX="Coordinate Transformation Matrix"
+
+get_devs2() {
+    devs=$(xsetwacom list devices)
+}
+
+get_devs() {
+    devs=$(xinput list --name-only | cat -b)
+    devs_count=$(printf "%s\n" "$devs" | wc -l)
+    printf "%s\n" "$devs"
+    printf "Please select the devices in this order (separated by spaces): "
+    printf "FINGER PEN ERASER PAD|0\n"
+    printf "(enter nothing to cancel)\n"
+    dev_ids=
+    finger_id=
+    pen_id=
+    eraser_id=
+    pad_id=
+    while is_not_integer "$finger_id" || [ "$finger_id" -lt 1 ] ||
+        [ "$finger_id" -gt "$devs_count" ] || is_not_integer "$pen_id" ||
+        [ "$pen_id" -lt 1 ] || [ "$pen_id" -gt "$devs_count" ] ||
+        is_not_integer "$eraser_id" || [ "$eraser_id" -lt 1 ] ||
+        [ "$eraser_id" -gt "$devs_count" ] || is_not_integer "$pad_id" ||
+        [ "$pad_id" -gt "$devs_count" ] || [ "$finger_id" -eq "$pen_id" ] ||
+        [ "$finger_id" -eq "$eraser_id" ] || [ "$finger_id" -eq "$pad_id" ] ||
+        [ "$pen_id" -eq "$eraser_id" ] || [ "$pen_id" -eq "$pad_id" ] ||
+        [ "$eraser_id" -eq "$pad_id" ]; do
+        printf "1-%d> " "$devs_count"
+        read -r dev_ids
+        [ -z "$dev_ids" ] && exit
+        finger_id=$(printf "%s\n" "$dev_ids" | cut -d' ' -f1)
+        pen_id=$(printf "%s\n" "$dev_ids" | cut -d' ' -f2)
+        eraser_id=$(printf "%s\n" "$dev_ids" | cut -d' ' -f3)
+        pad_id=$(printf "%s\n" "$dev_ids" | cut -d' ' -f4)
+    done
+    FINGER=$(xinput list --name-only | head -n"$finger_id" | tail -n1)
+    PEN=$(xinput list --name-only | head -n"$pen_id" | tail -n1)
+    ERASER=$(xinput list --name-only | head -n"$eraser_id" | tail -n1)
+    [ "$pad_id" -gt 0 ] && PAD=$(xinput list --name-only | head -n"$pad_id" | tail -n1)
+}
 
 set_ctm() {
     xinput set-prop "$1" --type=float "$MATRIX" \
@@ -21,6 +61,7 @@ reset_ctm() {
     set_ctm "$FINGER" 1 0 0 0 1 0 0 0 1
     set_ctm "$PEN" 1 0 0 0 1 0 0 0 1
     set_ctm "$ERASER" 1 0 0 0 1 0 0 0 1
+    [ -n "$PAD" ] && set_ctm "$PAD" 1 0 0 0 1 0 0 0 1
 }
 
 is_not_integer() {
@@ -44,6 +85,15 @@ while [ -n "$1" ]; do
             ;;
     esac
 done
+
+get_devs
+if [ -n "$SETTINGS_VERBOSE" ] && [ "$SETTINGS_VERBOSE" -ge 1 ]; then
+    echo "FINGER is $FINGER"
+    echo "PEN is $PEN"
+    echo "ERASER is $ERASER"
+    echo "PAD is $PAD"
+fi
+
 
 # format:
 # monitor_name width height offset_x offset_y
@@ -108,13 +158,16 @@ c3=$(echo "$TOUCH_OFFSET_Y/$TOTAL_HEIGHT" | bc -l)
 F_EXISTS=0
 P_EXISTS=0
 E_EXISTS=0
+PAD_EXISTS=0
 xinput list | grep -q "$FINGER" && F_EXISTS=1
 xinput list | grep -q "$PEN"    && P_EXISTS=1
 xinput list | grep -q "$ERASER" && E_EXISTS=1
+[ -n "$PAD" ] && xinput list | grep -q "$PAD" && PAD_EXISTS=1
 
 [ "$F_EXISTS" -eq 1 ] && set_ctm "$FINGER" "$c0" 0 "$c1" 0 "$c2" "$c3" 0 0 1
 [ "$P_EXISTS" -eq 1 ] && set_ctm "$PEN"    "$c0" 0 "$c1" 0 "$c2" "$c3" 0 0 1
 [ "$E_EXISTS" -eq 1 ] && set_ctm "$ERASER" "$c0" 0 "$c1" 0 "$c2" "$c3" 0 0 1
+[ "$PAD_EXISTS" -eq 1 ] && set_ctm "$PAD"  "$c0" 0 "$c1" 0 "$c2" "$c3" 0 0 1
 
 [ "$F_EXISTS" -eq 0 ] && echo "Error: The finger device doesn't exist" >&2
 [ "$P_EXISTS" -eq 0 ] && echo "Error: The pen device doesn't exist"    >&2
