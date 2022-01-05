@@ -62,7 +62,7 @@ echo "
     set xrange ['$DATE_MIN':'$DATE_MAX']
     set yrange [$CASES_MIN:$CASES_MAX]
     set y2range [$DEATHS_MIN:$DEATHS_MAX]
-    set obj 1 rect from graph 0.01,0.01 to character 15,4.2 front fillstyle solid noborder
+    set obj 1 rect from graph 0.01,0.01 to character 16.5,4.2 front fillstyle solid noborder
     set label 10 '$AVGCASES' at graph 0,0 font 'arial,11' tc rgb '$CASES_COL' offset character 1.2,1.7 front
     set label 11 '$AVGDEATH' at graph 0,0 font 'arial,11' tc rgb '$DEATH_COL' offset character 1.2,1.0 front
     set term pdf color font 'arial,14' linewidth 2

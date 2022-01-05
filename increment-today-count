@@ -1,0 +1,28 @@
+#!/bin/sh
+
+count_file="$HOME/Documents/daily-count.csv"
+
+today="$(date --iso-8601)"
+
+last_entry="$(tail -n1 "$count_file")"
+
+VERBOSE=${VERBOSE-0}
+
+case "${last_entry%%,*}" in
+    "$today"*)
+        [ "$VERBOSE" -ge 1 ] && echo "Incrementing existing line's count"
+        # Get the previous count value
+        prev="${last_entry##*,}"
+        # Add one to it
+        new="$((prev + 1))"
+        # Replace the last line of the file
+        sed -i "\$s/,.*\$/,$new/" "$count_file"
+        ;;
+    *)
+        [ "$VERBOSE" -ge 1 ] && echo "Appending a new line with count 1"
+        # Generate the new value for the line
+        line="$today,1"
+        # Append it to the file
+        echo "$line" >> "$count_file"
+        ;;
+esac
