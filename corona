@@ -31,23 +31,20 @@ result=$(grep -E -i "UK" "$FILENAME" |
 
 echo "$result"
 
-hour=$(date +%H)
-if [ "$hour" -ge 16 ]; then # This is a hack to get around outdated info
-    cases=$(echo "$result" | cut -d' ' -f3 | tr -d '(+,)')
-    deaths=$(echo "$result" | cut -d' ' -f5 | tr -d '(+,)')
-#    [ "$cases" = "" ] && exit
-#    [ "$deaths" = "" ] && deaths=0
-    [ "$cases" = "" ] || [ "$deaths" = "" ] && exit # Don't add to file if c/d info missing
-    # TODO: Add cum_cases & cum_deaths?
-    dbresult="$today,$epochnow,$cases,$deaths"
-
-    mostrecent=$(tail -n1 "$DBFILE" | cut -d',' -f1)
-    lastepoch=$(tail -n1 "$DBFILE" | cut -d',' -f2)
-
-    # If the latest entry is not for today, and the last entry is at least 18
-    # hours old, then add the new data for today to the end of the database file
-    if [ "$mostrecent" != "$today" ] &&
-       [ $((epochnow - lastepoch)) -ge $((18*60*60)) ]; then
-        echo "$dbresult" >> "$DBFILE"
-    fi
-fi
+#hour=$(date +%H)
+#if [ "$hour" -ge 16 ]; then # This is a hack to get around outdated info
+#    cases=$(echo "$result" | cut -d' ' -f3 | tr -d '(+,)')
+#    deaths=$(echo "$result" | cut -d' ' -f5 | tr -d '(+,)')
+#    [ "$cases" = "" ] || [ "$deaths" = "" ] && exit # Don't add to file if c/d info missing
+#    dbresult="$today,$epochnow,$cases,$deaths"
+#
+#    mostrecent=$(tail -n1 "$DBFILE" | cut -d',' -f1)
+#    lastepoch=$(tail -n1 "$DBFILE" | cut -d',' -f2)
+#
+#    # If the latest entry is not for today, and the last entry is at least 18
+#    # hours old, then add the new data for today to the end of the database file
+#    if [ "$mostrecent" != "$today" ] &&
+#       [ $((epochnow - lastepoch)) -ge $((18*60*60)) ]; then
+#        echo "$dbresult" >> "$DBFILE"
+#    fi
+#fi

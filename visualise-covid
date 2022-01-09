@@ -1,18 +1,10 @@
 #!/bin/sh
 
-XDG_DATA_HOME=${XDG_DATA_HOME:-"$HOME/.local/share"}
-
-DB_DIR="$XDG_DATA_HOME"
-DB_FILENAME="dbcorona"
-
-SMA_AWKSCRIPT="/home/sam/.scripts/visualise-covid-sma.awk"
+CACHE_PATH="$XDG_CACHE_HOME/covid_data.csv"
 SMA_FILENAME="sma.csv"
 
-AVG_LEN=7
-
 wdir="$(mktemp -d)"
-awk -F, -f "$SMA_AWKSCRIPT" -v "avg_size=$AVG_LEN" \
-    "$DB_DIR/$DB_FILENAME" > "$wdir/$SMA_FILENAME"
+cp "$CACHE_PATH" "$wdir/$SMA_FILENAME"
 pdf_file="$wdir/plot.pdf"
 
 CASES_COL="blue"
@@ -40,8 +32,8 @@ CASES_MAX=$(( (3*MAXC_LASTMONTH/2000) * 1000 ))
 DEATHS_MAX=$(( (3*MAXD_LASTMONTH/20) * 10 ))
 
 #TODAY="$(tail -n1 "$wdir/$SMA_FILENAME" | cut -d, -f1)"
-AVGCASES="$(tail -n$(( AVG_LEN / 2 + 1 )) "$wdir/$SMA_FILENAME" | head -n1 | cut -d, -f"$AVGCASESF" | numfmt --grouping)"
-AVGDEATH="$(tail -n$(( AVG_LEN / 2 + 1 )) "$wdir/$SMA_FILENAME" | head -n1 | cut -d, -f"$AVGDEATHSF" | numfmt --grouping)"
+AVGCASES="$(cut -d, -f"$AVGCASESF" "$wdir/$SMA_FILENAME" | tac | grep -m1 . | numfmt --grouping)"
+AVGDEATH="$(cut -d, -f"$AVGDEATHSF" "$wdir/$SMA_FILENAME" | tac | grep -m1 . | numfmt --grouping)"
 
 #FIRSTDATE="$(tail -n"$AVG_LEN" "$DB_DIR/$DB_FILENAME" | head -n1 | cut -d, -f"$DATEF")"
 #FSTCASES="$(grep "$FIRSTDATE" "$wdir/$SMA_FILENAME" | cut -d, -f"$CASESF" | numfmt --grouping)"
