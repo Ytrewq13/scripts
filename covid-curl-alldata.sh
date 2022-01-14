@@ -7,11 +7,15 @@ CURL_REQUEST_TYPE="GET"
 CURL_HEADER="accept: */*"
 JQ_FILTER='[keys_unsorted, [.[].newCases], [.[].todayDeaths]] | transpose |
     map([.[0], .[1], .[2]]) | reverse | .[] | @csv'
+JQ_LATEST='keys_unsorted | .[0]'
 SMA_AWKSCRIPT="/home/sam/.scripts/generic-sma.awk"
 
 CACHE_DIR="$XDG_CACHE_HOME"
 CACHE_FILENAME="covid_data.csv"
 CACHE_PATH="$CACHE_DIR/$CACHE_FILENAME"
+CACHE_LAST_RUNTIME="$CACHE_DIR/covid_last_runtime"
+
+date -Isec > "$CACHE_LAST_RUNTIME"
 
 RAW_JSON_FILENAME="raw_data.json"
 CSV_FILENAME="cases_deaths.csv"
@@ -22,6 +26,10 @@ AVG_CASES_FILENAME="avg_cases"
 AVG_DEATHS_FILENAME="avg_deaths"
 
 COMBINED_CSV_FILENAME="all_data.csv"
+
+# Get the latest date from the cache
+[ -f "$CACHE_PATH" ] && latest_cache="$(cut -d, -f1 "$CACHE_PATH" | tac | grep -m1 .)"
+latest_cache=${latest_cache-"1970-01-01"}
 
 # Create a temporary directory
 TMPDIR="$(mktemp -d)"
@@ -48,6 +56,14 @@ curl --request "$CURL_REQUEST_TYPE" \
 if [ "$?" -ne 0 ]; then
     rm -rf "$TMPDIR"
     exit 1
+fi
+
+# Check which day was the latest
+latest_url="$(jq -r "$JQ_LATEST" "$RAW_JSON_PATH")"
+if [ "$latest_url" = "$latest_cache" ]; then
+    # No new data since last cache update
+    rm -rf "$TMPDIR"
+    exit 0
 fi
 
 JQ_FILTER_DATES='keys_unsorted | reverse | .[]'
@@ -91,8 +107,5 @@ cp "$COMBINED_CSV_PATH" "$CACHE_PATH"
 
 rm -rf "$TMPDIR"
 
-# TODO: implement a generic simple moving average (awk?) script (with arbitrary
-# average size) - simple moving average with arbitrary length that takes a
-# single column as input and returns a single column as output
-# TODO: change visualise-covid to use this cache file, and use different sized
-# averages for each of cases and deaths
+# Update the visualisation pdf
+/home/sam/.scripts/update-covid-visualisation
