@@ -4,7 +4,7 @@ count_file="$HOME/Documents/daily-count.csv"
 
 today="$(date --iso-8601)"
 
-last_entry="$(tail -n1 "$count_file")"
+last_entry="$(tail --lines=1 "$count_file")"
 
 VERBOSE=${VERBOSE-0}
 
@@ -26,3 +26,8 @@ case "${last_entry%%,*}" in
         echo "$line" >> "$count_file"
         ;;
 esac
+
+# Send a quick notification (500 milliseconds) to let the user see what the
+# value was incremented to
+notify-send --urgency=normal --expire-time=500 "Incremented" \
+    "$(tail --lines=1 "$count_file")"
