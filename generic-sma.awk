@@ -1,4 +1,11 @@
+# Awk script to produce a Simple Moving Average of a single column of data.
+# Set `avg_size` to control the width of the window used to compute the average
+# (i.e. `avg_size=7` for a 7-day average with daily data)
+# Recommended usage is from a shell script (with pipes or temporary files):
+# `... | awk -F, -f"/path/to/this/script.awk" -v "avg_size=14" | ...`
+
 BEGIN {
+    if (length(avg_size) == 0) { avg_size=7; }
     # Running sum
     the_sum = 0
 }

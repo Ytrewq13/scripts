@@ -10,12 +10,13 @@ JQ_FILTER='[keys_unsorted, [.[].newCases], [.[].todayDeaths]] | transpose |
 JQ_LATEST='keys_unsorted | .[0]'
 SMA_AWKSCRIPT="/home/sam/.scripts/generic-sma.awk"
 
-CACHE_DIR="$XDG_CACHE_HOME"
+CACHE_DIR="${XDG_CACHE_HOME:-/home/sam/.cache}"
 CACHE_FILENAME="covid_data.csv"
 CACHE_PATH="$CACHE_DIR/$CACHE_FILENAME"
 CACHE_LAST_RUNTIME="$CACHE_DIR/covid_last_runtime"
 
 date -Isec > "$CACHE_LAST_RUNTIME"
+id >> "$CACHE_LAST_RUNTIME"
 
 RAW_JSON_FILENAME="raw_data.json"
 CSV_FILENAME="cases_deaths.csv"
@@ -108,4 +109,4 @@ cp "$COMBINED_CSV_PATH" "$CACHE_PATH"
 rm -rf "$TMPDIR"
 
 # Update the visualisation pdf
-/home/sam/.scripts/update-covid-visualisation
+/bin/sh /home/sam/.scripts/update-covid-visualisation
