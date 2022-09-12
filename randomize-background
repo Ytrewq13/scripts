@@ -4,5 +4,5 @@ CURRENT_BG_FILE="$HOME/.cache/current-desktop-background"
 
 new="$(desktop-bg-rand.sh)"
 
-feh --no-fehbg --bg-scale "$new"
+feh --no-fehbg --bg-fill "$new"
 echo "$new" > "$CURRENT_BG_FILE"
