@@ -1,0 +1,7 @@
+#!/bin/sh
+
+mv ~/.local/share/.tiny-media-manager ~/
+
+tinymediamanager
+
+mv ~/.tiny-media-manager ~/.local/share/
