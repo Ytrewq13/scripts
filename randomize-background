@@ -1,8 +1,0 @@
-#!/bin/sh
-
-CURRENT_BG_FILE="$HOME/.cache/current-desktop-background"
-
-new="$(desktop-bg-rand.sh)"
-
-feh --no-fehbg --bg-scale "$new"
-echo "$new" > "$CURRENT_BG_FILE"
